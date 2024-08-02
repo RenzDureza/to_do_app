@@ -38,7 +38,6 @@ class _homePageState extends State<homePage> {
       ),
     );
   }
-
   // read
   void readData() {
 
@@ -51,7 +50,6 @@ class _homePageState extends State<homePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       backgroundColor: Color.fromRGBO(27,71,105,1.000),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
