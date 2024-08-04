@@ -1,5 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:to_do_app/db/database.dart';
+import 'package:to_do_app/util/dialog_box.dart';
 import 'package:to_do_app/util/todo_tile.dart';
 
 class FolderPage extends StatefulWidget {
@@ -10,16 +15,56 @@ class FolderPage extends StatefulWidget {
 }
 
 class _FolderPageState extends State<FolderPage> {
-List todoList = [
-  ["Review", false],
-  ["Play Game", false],  
-];
+  final _myBox = Hive.box('myBox');
+  final _controller = TextEditingController();
 
-void checkBoxChange(bool? value, int index) {  
-  setState(() {
-    todoList[index][1] = !todoList[index][1];
-  });
-}
+  TodoDataBase db = TodoDataBase();
+
+  void initState() {
+
+    if(_myBox.get("TODOLIST") == null) {
+      db.createInitialData();
+    } else {
+      db.loadData();
+    }
+    super.initState();
+  }
+
+  void checkBoxChange(bool? value, int index) {  
+    setState(() {
+      db.todoList[index][1] = !db.todoList[index][1];
+    });
+    db.updateDatabase();
+  }
+
+  void saveTask() {
+    setState(() {
+      db.todoList.add([_controller.text, false]);
+      _controller.clear();
+    });
+    Navigator.of(context).pop();
+    db.updateDatabase();
+  }
+
+  void createTask() {
+    showDialog(
+      context: context, 
+      builder: (context) {
+      return DialogBox(
+        controller: _controller,
+        onSave: saveTask,
+        onCancel: () => Navigator.of(context).pop(),
+        );
+      },
+    );
+  }
+
+  void deleteTask(int index) {
+    setState(() {
+      db.todoList.removeAt(index);
+    });
+    db.updateDatabase();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +80,14 @@ void checkBoxChange(bool? value, int index) {
             ),
         ),
       ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: createTask,
+        child: const Icon(Icons.add),
+        backgroundColor: Color.fromRGBO(117,164,197,1.000),
+        foregroundColor: Color.fromRGBO(27,71,105,1.000),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+      ),
       
       body: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20),
@@ -42,7 +95,7 @@ void checkBoxChange(bool? value, int index) {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-            "title", 
+            "To-Do", 
             style: GoogleFonts.playfairDisplay(
               color: Color.fromRGBO(117,164,197,1.000), 
               fontSize: 35, 
@@ -52,7 +105,7 @@ void checkBoxChange(bool? value, int index) {
             ),
 
             Text(
-              "date",
+              "ver 1.0",
               style: GoogleFonts.playfairDisplay(
                 color: Color.fromRGBO(80,127,169,1.000),
                 ),
@@ -61,12 +114,13 @@ void checkBoxChange(bool? value, int index) {
             Expanded(
               child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: todoList.length,
+                itemCount: db.todoList.length,
                 itemBuilder: (context, index) {
                   return TodoTile(
-                    taskName: todoList[index][0],
-                    taskCompleted: todoList[index][1],
+                    taskName: db.todoList[index][0],
+                    taskCompleted: db.todoList[index][1],
                     onChanged: (value) => checkBoxChange(value, index),
+                    deleteFunc: (context) => deleteTask(index),
                   );
                 }
               ),
