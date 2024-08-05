@@ -2,6 +2,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 class TodoDataBase {
   List todoList = [];
+  List todoFolder = [];
   final _myBox = Hive.box('myBox');
 
   void createInitialData() {
@@ -17,5 +18,6 @@ class TodoDataBase {
 
   void updateDatabase() {
     _myBox.put("TODOLIST", todoList);
+    _myBox.put("TODOFOLDER", todoFolder);
   }
 }

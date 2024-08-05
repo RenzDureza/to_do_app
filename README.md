@@ -9,3 +9,7 @@ My 2nd Flutter project
 - Finished the "New Task Folder" page.
 - Implemented HiveDB for the Task Folder.
 - Build the ver 1.0.
+
+05/08/2024
+- Can create "Task Folders".
+- Can delete "Task Folders".

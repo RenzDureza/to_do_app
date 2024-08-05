@@ -1,6 +1,9 @@
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:to_do_app/db/database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:to_do_app/util/todo_fab.dart';
+import 'package:to_do_app/util/dialog_box.dart';
+import 'package:to_do_app/util/folder.dart';
 
 class homePage extends StatefulWidget {
   const homePage({super.key});
@@ -10,42 +13,39 @@ class homePage extends StatefulWidget {
 }
 
 class _homePageState extends State<homePage> {
+  final _myBox = Hive.box('myBox');
   final textController = TextEditingController();
-
-
+  TodoDataBase db = TodoDataBase();
   // create task folder
-  void createTaskFokder() {
+  void createTaskFolder() {
     showDialog(
       context: context, 
-      builder: (context) => AlertDialog(
-        title: const Text("New Folder"),
-        content: TextField(
-          controller: textController,
-        ),
-        actions: [
-          MaterialButton(
-            onPressed: () {
-              // add to db
-
-              // clear controller
-              textController.clear();
-              // pop the dialog
-              Navigator.pop(context);
-            },
-            child: const Text("Create"),
-          )
-        ],
-      ),
+      builder: (context) {
+        return DialogBox(
+          controller: textController, 
+          onSave: saveFolder, 
+          onCancel: () => Navigator.of(context).pop(),
+        );
+      }
     );
   }
-  // read
-  void readData() {
-
+  
+  void saveFolder() {
+    setState(() {
+      db.todoFolder.add([textController.text]);
+      textController.clear();
+    });
+    Navigator.of(context).pop();
+    db.updateDatabase();
   }
-  // delete
-  void deleteData() {
 
+  void deleteFolder(int index) {
+    setState(() {
+      db.todoFolder.removeAt(index);
+    });
+    db.updateDatabase();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -61,8 +61,12 @@ class _homePageState extends State<homePage> {
           ),
       ),
 
-      floatingActionButton: TodoFab(
-        onPressed: () {},
+      floatingActionButton: FloatingActionButton(
+        onPressed: createTaskFolder,
+        child: const Icon(Icons.add),
+        backgroundColor: Color.fromRGBO(117,164,197,1.000),
+        foregroundColor: Color.fromRGBO(27,71,105,1.000),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
       ),
 
       body: Padding(
@@ -71,35 +75,16 @@ class _homePageState extends State<homePage> {
           children: [
             Expanded(
               child: GridView.builder(
-                itemCount: 5,
-                clipBehavior: Clip.none,
+                itemCount: db.todoFolder.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2, 
                   crossAxisSpacing: 7, 
                   mainAxisSpacing: 7
                 ),
-                itemBuilder: (context, int index) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: const Color.fromRGBO(117,164,197,1.000),
-                      borderRadius: BorderRadius.circular(12)
-                    ),
-                    padding: EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("title", maxLines: 1, overflow: TextOverflow.fade, style: GoogleFonts.playfairDisplay(color: Color.fromRGBO(27,71,105,1.000), fontSize: 20, fontWeight: FontWeight.bold),),
-
-                        Expanded(child: Text('content', maxLines: 1, overflow: TextOverflow.fade, style: GoogleFonts.playfairDisplay(color: Color.fromRGBO(80,127,169,1.000), fontSize: 15),)),
-                        Row(
-                          children: [
-                            Text("date", style: GoogleFonts.playfairDisplay(color: Color.fromRGBO(80,127,169,1.000)),),
-                            Spacer(),
-                            Icon(Icons.delete, color:  Color.fromRGBO(80, 127, 169, 1),)
-                          ],
-                        )
-                      ],
-                    ),
+                itemBuilder: (context, index) {
+                  return Folder(
+                    folderName: db.todoFolder[index][0],
+                    deleteFunc: (context) => deleteFolder(index),
                   );
                 },
               ),

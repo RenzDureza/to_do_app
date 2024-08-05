@@ -21,7 +21,6 @@ class _FolderPageState extends State<FolderPage> {
   TodoDataBase db = TodoDataBase();
 
   void initState() {
-
     if(_myBox.get("TODOLIST") == null) {
       db.createInitialData();
     } else {
